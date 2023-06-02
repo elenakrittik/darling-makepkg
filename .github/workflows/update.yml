@@ -1,0 +1,38 @@
+name: Weekly update
+on:
+  schedule:
+    - cron: "0 0 * * 1" # Every monday
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  update:
+    name: Update PKGBUILD
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install Python and pip # Say thanks to shitbuntu for outdated python
+        run: |
+          sudo apt update
+          sudo apt upgrade
+          sudo apt install python3 python3-pip
+
+      - name: Install requests # Say thanks to shitbuntu for outdated requests
+        run: pip3 install requests==2.31.0
+
+      - name: Run Python script
+        run: python3 update.py
+
+      - name: Push changes
+        run: |
+          git config --local user.name github-actions
+          git config --locale user.email github-actions@github.com
+          git add PKGBUILD
+          git commit -m "$(date --utc +'Scheduled update - %d.%m.%Y')"
+          git push
